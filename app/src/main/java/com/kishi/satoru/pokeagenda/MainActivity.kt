@@ -2,9 +2,16 @@ package com.kishi.satoru.pokeagenda
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import com.kishi.satoru.pokeagenda.api.PokemonAPI
+import com.kishi.satoru.pokeagenda.model.Pokemon
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,9 +26,23 @@ class MainActivity : AppCompatActivity() {
 
     fun pesquisarPokemon() {
         val retrofit = Retrofit.Builder()
-                .baseUrl("https://api.github.com/")
+                .baseUrl("https://pokeapi.co")
+                .addConverterFactory(GsonConverterFactory.create())
                 .build()
 
-        val service = retrofit.create(PokemonAPI::class.java)
+        val api = retrofit.create(PokemonAPI::class.java)
+        api.buscarPokemon(etNumeroPokemon.text.toString().toInt())
+                .enqueue(object : Callback<Pokemon> {
+                    override fun onResponse(call: Call<Pokemon>?, response: Response<Pokemon>?) {
+                        tvNomePokemon.setText(response?.body()?.name)
+                        Picasso.with(applicationContext)
+                                .load(response?.body()?.sprites?.frontDefault)
+                                .into(ivPokemon)
+                    }
+
+                    override fun onFailure(call: Call<Pokemon>?, t: Throwable?) {
+                        Toast.makeText(applicationContext, t?.message, Toast.LENGTH_LONG).show()
+                    }
+                })
     }
 }
